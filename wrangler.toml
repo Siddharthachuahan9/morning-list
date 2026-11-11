@@ -1,0 +1,44 @@
+name = "morning-list"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+# Keep the workers.dev address working beside the custom domain
+workers_dev = true
+
+[vars]
+# The one login for now. The password is a Worker secret: npx wrangler secret put LOGIN_PASSWORD
+LOGIN_EMAIL = "denise@example.com"
+OWNER_NAME = "Denise"
+TIMEZONE = "America/Chicago"
+BUSINESS_NAME = "Coldline Refrigeration"
+# Her cell. Calls to the Twilio number ring here first; leave empty to send callers straight to voicemail.
+FORWARD_TO = ""
+# The morning email. Hardcoded for now: the hour in TIMEZONE and who it is from.
+# Who gets it is a secret, so the address stays out of the repo: npx wrangler secret put DIGEST_TO
+DIGEST_HOUR = "7"
+MAIL_FROM = "Morning List <list@morninglist.sidstack.in>"
+APP_URL = "https://morninglist.sidstack.in"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "morning-list"
+database_id = "9ba5ac19-afe2-4056-aecf-54ee4908645c"
+
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+# Runs every hour and sends the morning email when it is DIGEST_HOUR in TIMEZONE, so daylight saving never shifts it
+[triggers]
+crons = ["0 * * * *"]
+
+[[routes]]
+pattern = "morninglist.sidstack.in"
+custom_domain = true
+
+# Cloudflare Email Service sends the morning email
+[[send_email]]
+name = "EMAIL"

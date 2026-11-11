@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="/app.css">
+<title>Request a repair</title>
+</head>
+<body>
+<main class="solo wide">
+  <div>
+    <h1>Request a repair</h1>
+    <p class="muted" style="margin-top:6px">Walk-in coolers, freezers and ice machines. Tell us what is wrong and we will call you back.</p>
+  </div>
+  <form class="card" id="req">
+    <div class="two">
+      <label>Your name<input type="text" id="name" autocomplete="name" required maxlength="80"></label>
+      <label>Business<input type="text" id="business" autocomplete="organization" maxlength="120"></label>
+    </div>
+    <label>Phone number<input type="tel" id="phone" autocomplete="tel" required maxlength="40"></label>
+    <label>What is wrong?<textarea id="message" required maxlength="2000" placeholder="Example: our walk-in cooler is at 50 degrees and not coming down"></textarea></label>
+    <input type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+    <p class="err" id="err" hidden></p>
+    <button class="btn main" id="go">Send request</button>
+  </form>
+  <div class="card" id="done" hidden>
+    <h2>We got your request</h2>
+    <p>We will call you back on the number you gave. If equipment is down, we treat it as urgent.</p>
+  </div>
+</main>
+<script>
+document.getElementById('req').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const v = (id) => document.getElementById(id).value;
+  const err = document.getElementById('err'), go = document.getElementById('go');
+  err.hidden = true; go.disabled = true;
+  try {
+    const r = await fetch('/api/public/request', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: v('name'), business: v('business'), phone: v('phone'), message: v('message'), website: v('website') }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Could not send. Please try again.');
+    document.getElementById('req').hidden = true; document.getElementById('done').hidden = false;
+  } catch (ex) { err.textContent = ex.message; err.hidden = false; go.disabled = false; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="/app.css">
+<title>Log in · Morning List</title>
+</head>
+<body>
+<main class="solo">
+  <div>
+    <h1>Morning List</h1>
+    <p class="muted" style="margin-top:6px">Who to call today, and where each job is at.</p>
+  </div>
+  <form class="card" id="login">
+    <label>Email<input type="email" id="email" autocomplete="username" required></label>
+    <label>Password<input type="password" id="password" autocomplete="current-password" required></label>
+    <p class="err" id="err" hidden></p>
+    <button class="btn main" id="go">Log in</button>
+  </form>
+</main>
+<script>
+document.getElementById('login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err'), go = document.getElementById('go');
+  err.hidden = true; go.disabled = true;
+  try {
+    const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Could not log in. Try again.');
+    location.href = '/';
+  } catch (ex) { err.textContent = ex.message; err.hidden = false; go.disabled = false; }
+});
+</script>
+</body>
+</html>

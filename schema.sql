@@ -1,0 +1,35 @@
+CREATE TABLE IF NOT EXISTS jobs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  business TEXT NOT NULL DEFAULT '',
+  contact TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  issue TEXT NOT NULL DEFAULT '',
+  source TEXT NOT NULL DEFAULT 'Phone',
+  emergency INTEGER NOT NULL DEFAULT 0,
+  stage TEXT NOT NULL DEFAULT 'new',
+  quote_amount INTEGER NOT NULL DEFAULT 0,
+  tech TEXT NOT NULL DEFAULT '',
+  scheduled_for TEXT NOT NULL DEFAULT '',
+  lost_reason TEXT NOT NULL DEFAULT '',
+  raw_message TEXT NOT NULL DEFAULT '',
+  is_example INTEGER NOT NULL DEFAULT 0,
+  slot_date TEXT NOT NULL DEFAULT '',
+  slot INTEGER NOT NULL DEFAULT -1,
+  last_attempt_at TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  last_contact_at TEXT NOT NULL,
+  stage_changed_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  job_id INTEGER NOT NULL,
+  at TEXT NOT NULL,
+  note TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS events_job ON events(job_id);
+CREATE TABLE IF NOT EXISTS hits (
+  kind TEXT NOT NULL,
+  ip TEXT NOT NULL,
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS hits_lookup ON hits(kind, ip, at);
