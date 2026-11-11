@@ -178,29 +178,30 @@ function readForm(prefix) {
   return { business: v('business'), contact: v('contact'), phone: v('phone'), source: v('source'), issue: v('issue'), emergency: document.getElementById(`${prefix}-emergency`).checked };
 }
 function addView() {
-  return `${titleRow('New job', 'Paste the customer\'s text, or type what they told you on the phone. Include their number.')}
-    <div class="panel pad">
-      <label>What did they say?<textarea id="paste" placeholder="Example: Jo from Marina Grill, walk-in cooler is at 50 and not coming down, fish at risk. 312-555-0124"></textarea></label>
-      <label>How did it come in?<select id="quick-source"><option value="Phone">Phone call</option><option value="Text">Text</option><option>Referral</option><option>Repeat customer</option><option>Other</option></select></label>
-      <p class="err" id="quick-err" hidden></p>
-      <div class="acts"><button class="btn main" id="quick-add">Add to the list</button><button class="txt" id="by-hand">Fill in the details myself</button></div>
-    </div>
-    <form class="panel pad" id="add-form" hidden>
-      <h2>Check the details</h2>
+  return `${titleRow('New job', 'Fill in who it is and what is wrong. Have a text from them? Paste it and the details fill in for you.')}
+    <form class="panel pad" id="add-form">
       ${leadForm('add', { business: '', contact: '', phone: '', issue: '', source: 'Phone', emergency: false })}
       <p class="err" id="add-err" hidden></p>
-      <div class="acts"><button class="btn main">Add to the list</button></div>
-    </form>`;
+      <div class="acts"><button class="btn main">Add to the list</button><button class="txt" type="button" id="show-paste">Paste a message instead</button></div>
+    </form>
+    <div class="panel pad" id="paste-box" hidden>
+      <h2>Paste a message</h2>
+      <label>What did they say?<textarea id="paste" placeholder="Example: Jo from Marina Grill, walk-in cooler is at 50 and not coming down, fish at risk. 312-555-0124"></textarea></label>
+      <p class="err" id="quick-err" hidden></p>
+      <div class="acts"><button class="btn" id="quick-add">Fill in the details for me</button></div>
+    </div>`;
 }
-function showForm(lead) {
-  const f = document.getElementById('add-form');
-  if (lead) {
-    for (const k of ['business', 'contact', 'phone', 'issue']) document.getElementById(`add-${k}`).value = lead[k] || '';
-    document.getElementById('add-emergency').checked = !!lead.emergency;
-    document.getElementById('add-source').value = document.getElementById('quick-source').value;
-  }
-  f.hidden = false;
-  f.scrollIntoView({ block: 'nearest' });
+function showPaste() {
+  const b = document.getElementById('paste-box');
+  b.hidden = false;
+  document.getElementById('paste').focus();
+  b.scrollIntoView({ block: 'nearest' });
+}
+// Put what the AI read into the form. She checks it, then adds it herself.
+function fillForm(lead) {
+  for (const k of ['business', 'contact', 'phone', 'issue']) if (lead[k]) document.getElementById(`add-${k}`).value = lead[k];
+  document.getElementById('add-emergency').checked = !!lead.emergency;
+  document.getElementById('add-form').scrollIntoView({ block: 'start' });
 }
 function keepDraft() {
   if (document.getElementById('paste')) draft = document.getElementById('paste').value;
@@ -221,7 +222,7 @@ function helpView() {
     <div class="panel"><ol class="steps">
       <li><div><h3>Each morning, open Today</h3><p>It lists who needs a call from you and why. Equipment that is down is at the top.</p></div></li>
       <li><div><h3>Call, then tap "What happened?"</h3><p>Pick what happened from the short list. The job moves on by itself and comes back when someone is waiting on you again.</p></div></li>
-      <li><div><h3>New request? Tap New job</h3><p>Paste the text or type what they said. Requests from the website form show up on their own.</p></div></li>
+      <li><div><h3>New request? Tap New job</h3><p>Fill in who it is and what is wrong, or paste their text and the details fill in for you. Requests from the website form show up on their own.</p></div></li>
     </ol></div>
     ${S.digest && S.digest.to ? `<div class="panel pad">
       <h2>Your morning email</h2>
@@ -307,7 +308,7 @@ const TOUR = [
   ['#main .call .acts .btn.main', 'What happened?', 'After the call, tap this and pick from a short list, like "I sent the quote" or "They said yes". The job moves on by itself.'],
   ['#main .pipe', 'Where each job is at', 'Every open job, counted by step. Tap a step to see the jobs in it.'],
   ['#nav [data-view="jobs"]', 'Jobs', 'Every job in one place. Find a customer by name or phone, and see how many jobs are open.'],
-  ['#nav [data-view="add"]', 'New job', 'Got a call or a text? Paste it or type what they said. It goes straight onto your call list.'],
+  ['#nav [data-view="add"]', 'New job', 'Got a call or a text? Fill in who it is and what is wrong, or paste their message and the details fill in for you.'],
   ['#tour', 'That is it', 'Open Today each morning and start at the top. You can run this tour again any time from here.'],
 ];
 let tourAt = -1;
@@ -400,7 +401,10 @@ function render() {
   count.textContent = S.numbers.to_call || '';
   count.hidden = !S.numbers.to_call;
   main.innerHTML = { today: todayView, jobs: jobsView, add: addView, help: helpView }[v]();
-  if (v === 'add' && draft) document.getElementById('paste').value = draft;
+  if (v === 'add' && draft) {
+    document.getElementById('paste').value = draft;
+    document.getElementById('paste-box').hidden = false;
+  }
 }
 
 async function guard(fn, errEl) {
@@ -451,7 +455,7 @@ document.addEventListener('click', (e) => {
       }
     });
   }
-  if (t.id === 'by-hand') return showForm();
+  if (t.id === 'show-paste') return showPaste();
   if (t.id === 'quick-add') {
     const err = document.getElementById('quick-err');
     err.hidden = true;
@@ -460,13 +464,11 @@ document.addEventListener('click', (e) => {
     return guard(async () => {
       try {
         const r = await api('/api/parse', 'POST', { text: document.getElementById('paste').value.trim() });
-        const lead = { business: r.business, contact: r.contact, phone: r.phone, issue: r.issue, emergency: !!r.emergency, source: document.getElementById('quick-source').value };
-        if (lead.phone && lead.issue && (lead.business || lead.contact)) return await saveLead(lead);
-        showForm(lead);
-        throw new Error(lead.phone ? 'I could not tell who this is. Fill in the name below, then add it.' : 'I could not find a phone number. Add it below so you can call them back.');
+        fillForm(r);
+        toast(r.phone ? 'Filled in. Check the details, then add it.' : 'Filled in, but I could not find a phone number. Add it before you save.');
       } finally {
         t.disabled = false;
-        t.textContent = 'Add to the list';
+        t.textContent = 'Fill in the details for me';
       }
     }, err);
   }

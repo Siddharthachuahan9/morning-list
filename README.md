@@ -16,7 +16,7 @@ Requests reach her through her cell, a website form, texts, referrals and a note
 
 - **Today** is the one screen: who to call and why, most urgent first, then where each job is at in her own words with a count for each.
 - **Two buttons per job**: Call, and "What happened?". She picks what happened from a short list and the job moves itself.
-- **New job**: one box. Paste a text or type what the caller said. AI fills in the business, contact, phone and problem, and flags equipment that is down.
+- **New job**: a short form (business, contact, phone, what is wrong). As an option she can paste a text and AI fills the form in for her to check, including flagging equipment that is down.
 - **Jobs**: every job grouped by where it is at, a search box, and the numbers her husband asks for (open jobs, quotes out, done this month).
 - **Website form** (`/request`): requests land on the list by themselves.
 - **Morning email**: the same call list by email at 7 am her time, each person with a tap-to-call number. Help has a button to send it straight away.
